@@ -1,0 +1,719 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student Result Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style id="app-style">
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .app-header {
+      background: linear-gradient(135deg, #3a8dff 0%, #1a5fff 100%);
+      color: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-card, .results-card {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 25px;
+      height: 100%;
+    }
+    
+    .form-card h3, .results-card h3 {
+      color: #3a3a3a;
+      margin-bottom: 20px;
+      font-weight: 600;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 10px;
+    }
+    
+    .btn-primary {
+      background-color: #3a8dff;
+      border-color: #3a8dff;
+    }
+    
+    .btn-primary:hover {
+      background-color: #1a5fff;
+      border-color: #1a5fff;
+    }
+    
+    .btn-danger {
+      background-color: #ff4d4d;
+      border-color: #ff4d4d;
+    }
+    
+    .btn-danger:hover {
+      background-color: #e04040;
+      border-color: #e04040;
+    }
+    
+    .table th {
+      background-color: #f8f9fa;
+      border-color: #e9ecef;
+    }
+    
+    .table tr:hover {
+      background-color: rgba(58, 141, 255, 0.03);
+    }
+    
+    .form-control:focus, .btn:focus {
+      box-shadow: 0 0 0 0.25rem rgba(58, 141, 255, 0.25);
+    }
+    
+    .badge {
+      font-size: 0.9em;
+      padding: 5px 10px;
+    }
+    
+    .grade-A {
+      background-color: #28a745;
+    }
+    
+    .grade-B {
+      background-color: #5cb85c;
+    }
+    
+    .grade-C {
+      background-color: #ffc107;
+    }
+    
+    .grade-D {
+      background-color: #fd7e14;
+    }
+    
+    .grade-F {
+      background-color: #dc3545;
+    }
+    
+    .subject-inputs {
+      margin-bottom: 15px;
+    }
+    
+    .add-subject-btn {
+      margin-bottom: 20px;
+    }
+    
+    .action-buttons button {
+      margin-right: 5px;
+    }
+    
+    @media (max-width: 992px) {
+      .form-card, .results-card {
+        margin-bottom: 20px;
+      }
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: #6c757d;
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    /* Animation for new entries */
+    @keyframes highlightRow {
+      0% { background-color: rgba(58, 141, 255, 0.2); }
+      100% { background-color: transparent; }
+    }
+    
+    .highlight {
+      animation: highlightRow 2s ease-out;
+    }
+    
+    .marks-pill {
+      display: inline-block;
+      background: #f8f9fa;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin: 2px;
+      font-size: 0.85rem;
+      border: 1px solid #e9ecef;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header text-center">
+      <h1><i class="fas fa-graduation-cap me-2"></i> Student Result Management System</h1>
+      <p class="lead mb-0">Track, manage and analyze student performance efficiently</p>
+    </div>
+    
+    <div class="row">
+      <div class="col-lg-4 mb-4 mb-lg-0">
+        <div class="form-card">
+          <h3><i class="fas fa-user-plus me-2"></i> Student Information</h3>
+          <form id="studentForm">
+            <input type="hidden" id="editMode" value="false">
+            <input type="hidden" id="editId" value="">
+            
+            <div class="mb-3">
+              <label for="studentId" class="form-label">Student ID*</label>
+              <input type="text" class="form-control" id="studentId" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="studentName" class="form-label">Student Name*</label>
+              <input type="text" class="form-control" id="studentName" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="classGrade" class="form-label">Class/Grade Level*</label>
+              <input type="text" class="form-control" id="classGrade" required>
+            </div>
+            
+            <h5 class="mt-4 mb-3"><i class="fas fa-book me-2"></i> Subject Marks</h5>
+            
+            <div id="subjectContainer" class="subject-inputs">
+              <div class="mb-3 subject-group">
+                <div class="input-group">
+                  <span class="input-group-text">Subject 1</span>
+                  <input type="text" class="form-control" placeholder="Subject Name">
+                  <input type="number" class="form-control" placeholder="Mark" min="0" max="100">
+                  <button type="button" class="btn btn-outline-danger remove-subject" disabled>
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mb-3 subject-group">
+                <div class="input-group">
+                  <span class="input-group-text">Subject 2</span>
+                  <input type="text" class="form-control" placeholder="Subject Name">
+                  <input type="number" class="form-control" placeholder="Mark" min="0" max="100">
+                  <button type="button" class="btn btn-outline-danger remove-subject" disabled>
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mb-3 subject-group">
+                <div class="input-group">
+                  <span class="input-group-text">Subject 3</span>
+                  <input type="text" class="form-control" placeholder="Subject Name">
+                  <input type="number" class="form-control" placeholder="Mark" min="0" max="100">
+                  <button type="button" class="btn btn-outline-danger remove-subject">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="d-grid add-subject-btn">
+              <button type="button" class="btn btn-outline-primary" id="addSubject">
+                <i class="fas fa-plus me-2"></i>Add Subject
+              </button>
+            </div>
+            
+            <div class="mb-3">
+              <label for="notes" class="form-label">Additional Notes</label>
+              <textarea class="form-control" id="notes" rows="3"></textarea>
+            </div>
+            
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-save me-2"></i>Submit
+              </button>
+              <button type="button" class="btn btn-secondary" id="resetBtn">
+                <i class="fas fa-undo me-2"></i>Reset
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="col-lg-8">
+        <div class="results-card">
+          <h3>
+            <i class="fas fa-list-alt me-2"></i> Student Records
+            <span class="float-end">
+              <button class="btn btn-sm btn-outline-secondary" id="exportBtn">
+                <i class="fas fa-file-export me-1"></i> Export
+              </button>
+            </span>
+          </h3>
+          
+          <div class="table-responsive">
+            <table class="table table-hover" id="recordsTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Class</th>
+                  <th>Marks</th>
+                  <th>Total</th>
+                  <th>Average</th>
+                  <th>Grade</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recordsList">
+                <!-- Student records will be populated here -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div id="emptyState" class="empty-state">
+            <i class="fas fa-clipboard"></i>
+            <h5>No Student Records</h5>
+            <p>Add a student record to get started</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Notification for feedback -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <i class="fas fa-bell me-2"></i>
+        <strong class="me-auto" id="toastTitle">Notification</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toastMessage">
+        Hello, world! This is a toast message.
+      </div>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script id="app-script">
+    document.addEventListener('DOMContentLoaded', function() {
+      // DOM elements
+      const studentForm = document.getElementById('studentForm');
+      const studentId = document.getElementById('studentId');
+      const studentName = document.getElementById('studentName');
+      const classGrade = document.getElementById('classGrade');
+      const notes = document.getElementById('notes');
+      const subjectContainer = document.getElementById('subjectContainer');
+      const addSubjectBtn = document.getElementById('addSubject');
+      const submitBtn = document.getElementById('submitBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const recordsList = document.getElementById('recordsList');
+      const emptyState = document.getElementById('emptyState');
+      const editMode = document.getElementById('editMode');
+      const editId = document.getElementById('editId');
+      const exportBtn = document.getElementById('exportBtn');
+      
+      // Toast elements
+      const liveToast = document.getElementById('liveToast');
+      const toastTitle = document.getElementById('toastTitle');
+      const toastMessage = document.getElementById('toastMessage');
+      const toast = new bootstrap.Toast(liveToast);
+      
+      // Load data from localStorage
+      loadStudentRecords();
+      
+      // Add event listeners
+      addSubjectBtn.addEventListener('click', addSubjectField);
+      resetBtn.addEventListener('click', resetForm);
+      studentForm.addEventListener('submit', handleFormSubmit);
+      exportBtn.addEventListener('click', exportRecords);
+      
+      // Event delegation for remove subject, edit and delete buttons
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-subject')) {
+          removeSubjectField(e.target.closest('.subject-group'));
+        } else if (e.target.closest('.edit-btn')) {
+          editRecord(e.target.closest('.edit-btn').dataset.id);
+        } else if (e.target.closest('.delete-btn')) {
+          deleteRecord(e.target.closest('.delete-btn').dataset.id);
+        }
+      });
+      
+      // Function to add a new subject field
+      function addSubjectField() {
+        const subjectGroups = document.querySelectorAll('.subject-group');
+        const newIndex = subjectGroups.length + 1;
+        
+        const subjectGroup = document.createElement('div');
+        subjectGroup.className = 'mb-3 subject-group';
+        
+        subjectGroup.innerHTML = `
+          <div class="input-group">
+            <span class="input-group-text">Subject ${newIndex}</span>
+            <input type="text" class="form-control" placeholder="Subject Name">
+            <input type="number" class="form-control" placeholder="Mark" min="0" max="100">
+            <button type="button" class="btn btn-outline-danger remove-subject">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        `;
+        
+        subjectContainer.appendChild(subjectGroup);
+        
+        // Enable remove buttons if there are more than 3 subjects
+        updateRemoveButtons();
+      }
+      
+      // Function to remove a subject field
+      function removeSubjectField(groupElement) {
+        groupElement.remove();
+        
+        // Renumber the remaining subject labels
+        const subjectLabels = document.querySelectorAll('.input-group-text');
+        subjectLabels.forEach((label, index) => {
+          label.textContent = `Subject ${index + 1}`;
+        });
+        
+        // Update remove buttons state
+        updateRemoveButtons();
+      }
+      
+      // Function to ensure at least 3 subject fields remain
+      function updateRemoveButtons() {
+        const removeButtons = document.querySelectorAll('.remove-subject');
+        const subjectGroups = document.querySelectorAll('.subject-group');
+        
+        removeButtons.forEach(btn => {
+          btn.disabled = subjectGroups.length <= 3;
+        });
+      }
+      
+      // Handle form submission
+      function handleFormSubmit(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!validateForm()) {
+          return;
+        }
+        
+        // Get subject data
+        const subjectData = [];
+        const subjectGroups = document.querySelectorAll('.subject-group');
+        
+        subjectGroups.forEach(group => {
+          const inputs = group.querySelectorAll('input');
+          const subjectName = inputs[0].value.trim();
+          const subjectMark = inputs[1].value.trim();
+          
+          if (subjectName && subjectMark) {
+            subjectData.push({
+              name: subjectName,
+              mark: parseInt(subjectMark, 10)
+            });
+          }
+        });
+        
+        // Calculate total, average, and grade
+        const totalMarks = subjectData.reduce((sum, subject) => sum + subject.mark, 0);
+        const averageMark = totalMarks / subjectData.length;
+        const grade = calculateGrade(averageMark);
+        
+        const studentRecord = {
+          id: editMode.value === 'true' ? editId.value : studentId.value,
+          name: studentName.value,
+          class: classGrade.value,
+          subjects: subjectData,
+          total: totalMarks,
+          average: averageMark.toFixed(2),
+          grade: grade,
+          notes: notes.value
+        };
+        
+        // Save to localStorage
+        saveStudentRecord(studentRecord);
+        
+        // Reset the form
+        resetForm();
+        
+        // Show success toast
+        showToast('Success', editMode.value === 'true' ? 'Student record updated successfully!' : 'Student record added successfully!', 'success');
+      }
+      
+      // Function to validate the form
+      function validateForm() {
+        if (!studentId.value.trim()) {
+          showToast('Error', 'Student ID is required', 'danger');
+          return false;
+        }
+        
+        if (!studentName.value.trim()) {
+          showToast('Error', 'Student Name is required', 'danger');
+          return false;
+        }
+        
+        if (!classGrade.value.trim()) {
+          showToast('Error', 'Class/Grade is required', 'danger');
+          return false;
+        }
+        
+        // Check if student ID already exists (only for new records)
+        const existingRecords = JSON.parse(localStorage.getItem('studentRecords')) || [];
+        if (editMode.value !== 'true' && existingRecords.some(record => record.id === studentId.value)) {
+          showToast('Error', 'Student ID already exists', 'danger');
+          return false;
+        }
+        
+        // Validate subject marks
+        const subjectGroups = document.querySelectorAll('.subject-group');
+        let isValid = true;
+        
+        subjectGroups.forEach(group => {
+          const inputs = group.querySelectorAll('input');
+          const subjectName = inputs[0].value.trim();
+          const subjectMark = inputs[1].value.trim();
+          
+          if (!subjectName) {
+            showToast('Error', 'Subject name is required', 'danger');
+            isValid = false;
+            return;
+          }
+          
+          if (!subjectMark) {
+            showToast('Error', 'Subject mark is required', 'danger');
+            isValid = false;
+            return;
+          }
+          
+          const mark = parseInt(subjectMark, 10);
+          if (isNaN(mark) || mark < 0 || mark > 100) {
+            showToast('Error', 'Mark must be a number between 0 and 100', 'danger');
+            isValid = false;
+            return;
+          }
+        });
+        
+        return isValid;
+      }
+      
+      // Function to calculate grade based on average mark
+      function calculateGrade(averageMark) {
+        if (averageMark >= 90) return 'A';
+        if (averageMark >= 80) return 'B';
+        if (averageMark >= 70) return 'C';
+        if (averageMark >= 60) return 'D';
+        return 'F';
+      }
+      
+      // Function to save student record to localStorage
+      function saveStudentRecord(studentRecord) {
+        let studentRecords = JSON.parse(localStorage.getItem('studentRecords')) || [];
+        
+        if (editMode.value === 'true') {
+          // Update existing record
+          studentRecords = studentRecords.map(record => 
+            record.id === studentRecord.id ? studentRecord : record
+          );
+        } else {
+          // Add new record
+          studentRecords.push(studentRecord);
+        }
+        
+        localStorage.setItem('studentRecords', JSON.stringify(studentRecords));
+        
+        // Update the records table
+        loadStudentRecords();
+      }
+      
+      // Function to load student records from localStorage
+      function loadStudentRecords() {
+        const studentRecords = JSON.parse(localStorage.getItem('studentRecords')) || [];
+        
+        // Show/hide empty state
+        if (studentRecords.length === 0) {
+          emptyState.style.display = 'block';
+          recordsList.innerHTML = '';
+          return;
+        }
+        
+        emptyState.style.display = 'none';
+        
+        // Populate the records table
+        recordsList.innerHTML = '';
+        
+        studentRecords.forEach(record => {
+          const row = document.createElement('tr');
+          row.dataset.id = record.id;
+          
+          // Format marks for display
+          const marksDisplay = record.subjects.map(subject => 
+            `<span class="marks-pill">${subject.name}: ${subject.mark}</span>`
+          ).join(' ');
+          
+          row.innerHTML = `
+            <td>${record.id}</td>
+            <td>${record.name}</td>
+            <td>${record.class}</td>
+            <td>${marksDisplay}</td>
+            <td>${record.total}</td>
+            <td>${record.average}</td>
+            <td><span class="badge grade-${record.grade}">${record.grade}</span></td>
+            <td>${record.notes ? record.notes : '-'}</td>
+            <td class="action-buttons">
+              <button class="btn btn-sm btn-primary edit-btn" data-id="${record.id}">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-danger delete-btn" data-id="${record.id}">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          `;
+          
+          recordsList.appendChild(row);
+        });
+      }
+      
+      // Function to edit a record
+      function editRecord(recordId) {
+        const studentRecords = JSON.parse(localStorage.getItem('studentRecords')) || [];
+        const record = studentRecords.find(r => r.id === recordId);
+        
+        if (!record) {
+          showToast('Error', 'Record not found', 'danger');
+          return;
+        }
+        
+        // Populate the form with record data
+        studentId.value = record.id;
+        studentId.readOnly = true; // Don't allow ID editing
+        studentName.value = record.name;
+        classGrade.value = record.class;
+        notes.value = record.notes || '';
+        
+        // Clear existing subject fields
+        subjectContainer.innerHTML = '';
+        
+        // Add subject fields with data
+        record.subjects.forEach((subject, index) => {
+          const subjectGroup = document.createElement('div');
+          subjectGroup.className = 'mb-3 subject-group';
+          
+          subjectGroup.innerHTML = `
+            <div class="input-group">
+              <span class="input-group-text">Subject ${index + 1}</span>
+              <input type="text" class="form-control" placeholder="Subject Name" value="${subject.name}">
+              <input type="number" class="form-control" placeholder="Mark" min="0" max="100" value="${subject.mark}">
+              <button type="button" class="btn btn-outline-danger remove-subject">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+          
+          subjectContainer.appendChild(subjectGroup);
+        });
+        
+        // Set edit mode
+        editMode.value = 'true';
+        editId.value = recordId;
+        
+        // Change submit button text
+        submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update';
+        
+        // Update remove buttons state
+        updateRemoveButtons();
+        
+        // Scroll to form
+        document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });
+      }
+      
+      // Function to delete a record
+      function deleteRecord(recordId) {
+        if (!confirm('Are you sure you want to delete this record?')) {
+          return;
+        }
+        
+        let studentRecords = JSON.parse(localStorage.getItem('studentRecords')) || [];
+        
+        studentRecords = studentRecords.filter(record => record.id !== recordId);
+        
+        localStorage.setItem('studentRecords', JSON.stringify(studentRecords));
+        
+        // Update the records table
+        loadStudentRecords();
+        
+        // Show success toast
+        showToast('Success', 'Student record deleted successfully!', 'danger');
+      }
+      
+      // Function to reset the form
+      function resetForm() {
+        studentForm.reset();
+        
+        // Clear subject container and add 3 empty fields
+        subjectContainer.innerHTML = '';
+        
+        for (let i = 1; i <= 3; i++) {
+          const subjectGroup = document.createElement('div');
+          subjectGroup.className = 'mb-3 subject-group';
+          
+          subjectGroup.innerHTML = `
+            <div class="input-group">
+              <span class="input-group-text">Subject ${i}</span>
+              <input type="text" class="form-control" placeholder="Subject Name">
+              <input type="number" class="form-control" placeholder="Mark" min="0" max="100">
+              <button type="button" class="btn btn-outline-danger remove-subject" ${i < 3 ? 'disabled' : ''}>
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+          
+          subjectContainer.appendChild(subjectGroup);
+        }
+        
+        // Reset edit mode
+        editMode.value = 'false';
+        editId.value = '';
+        studentId.readOnly = false;
+        
+        // Reset submit button text
+        submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Submit';
+        
+        // Update remove buttons state
+        updateRemoveButtons();
+      }
+      
+      // Function to export records as CSV
+      function exportRecords() {
+        const studentRecords = JSON.parse(localStorage.getItem('studentRecords')) || [];
+        
+        if (studentRecords.length === 0) {
+          showToast('Info', 'No records to export', 'info');
+          return;
+        }
+        
+        // This is a prototype so we just show a message
+        showToast('Prototype Info', 'Export functionality will be added in the full version', 'info');
+      }
+      
+      // Function to show toast notifications
+      function showToast(title, message, type = 'primary') {
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+        
+        // Remove existing color classes
+        liveToast.className = 'toast';
+        
+        // Add appropriate color class
+        liveToast.classList.add('text-bg-' + type);
+        
+        toast.show();
+      }
+    });
+  </script>
+</body>
+</html>
